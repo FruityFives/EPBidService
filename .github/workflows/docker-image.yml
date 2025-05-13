@@ -20,7 +20,7 @@ jobs:
       IMAGE_NAME: bid-service
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 
 
       - name: Get metadata from csproj-file
         uses: kzrnm/get-net-sdk-project-versions-action@v2
