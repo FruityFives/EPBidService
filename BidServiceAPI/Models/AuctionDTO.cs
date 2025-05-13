@@ -1,0 +1,9 @@
+﻿namespace BidServiceAPI.Models
+{
+    public class AuctionDTO
+    {
+        public Guid Id { get; set; }
+        public string Status { get; set; }
+        public decimal MinBid { get; set; }
+    }
+}
