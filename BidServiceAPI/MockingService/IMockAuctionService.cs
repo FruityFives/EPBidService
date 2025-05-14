@@ -2,7 +2,7 @@
 
 namespace BidServiceAPI.MockingService
 {
-    public interface IAuctionServiceClient
+    public interface IMockAuctionService
     {
         Task<IEnumerable<AuctionDTO>> GetTodaysAuctionsAsync();
     }

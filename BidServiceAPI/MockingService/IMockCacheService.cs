@@ -1,6 +1,6 @@
 using BidServiceAPI.Models;
 
-public interface IAuctionCacheService
+public interface IMockCacheService
 {
     Task<AuctionDTO?> GetAuctionByIdInCache(Guid auctionId);
 
