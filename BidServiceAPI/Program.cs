@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICacheService, CacheService>();
 
-
+//This is a test
 builder.Services.AddScoped<IAuctionServiceClient, FakeAuctionServiceClient>();
 builder.Services.AddMemoryCache();
 
