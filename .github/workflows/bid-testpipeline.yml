@@ -1,0 +1,37 @@
+name: BidTestingPipeline
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "develop"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .Net 8.x
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build
+
+      - name: Test
+        run: dotnet test
+
+      - name: Upload test result
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.xml"
