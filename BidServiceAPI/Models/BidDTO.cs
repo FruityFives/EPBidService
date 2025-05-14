@@ -1,6 +1,6 @@
 public class BidDTO
 {
     public decimal Amount { get; set; }
-    public string AuctionId { get; set; }
-    public string UserId { get; set; }
+    public Guid AuctionId { get; set; }
+    public Guid UserId { get; set; }
 }

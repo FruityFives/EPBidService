@@ -7,5 +7,6 @@
         public Guid UserId { get; set; }           // Reference til den bruger der byder
         public decimal Amount { get; set; }
         public DateTime Timestamp { get; set; }
+
     }
 }

@@ -2,7 +2,7 @@
 {
     public class AuctionDTO
     {
-        public Guid Id { get; set; }
+        public Guid AuctionId { get; set; }
         public string Status { get; set; }
         public decimal MinBid { get; set; }
         public decimal CurrentBid {get; set;}
