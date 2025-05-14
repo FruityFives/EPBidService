@@ -15,7 +15,7 @@ builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddScoped<BidService>();
 builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
 builder.Services.AddScoped<IMockAuctionService, MockAuctionService>();
-=======
+
 
 builder.Services.AddMemoryCache();
 
