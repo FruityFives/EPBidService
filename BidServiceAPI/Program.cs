@@ -3,7 +3,7 @@ using BidServiceAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ?? Logging til console (vises i Docker logs)
+// Logging til vores console (vises i Docker logs)
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
