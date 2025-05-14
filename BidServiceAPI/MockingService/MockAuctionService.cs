@@ -2,7 +2,7 @@
 
 namespace BidServiceAPI.MockingService
 {
-    public class FakeAuctionServiceClient : IAuctionServiceClient
+    public class MockAuctionService : IMockAuctionService
     {
         public Task<IEnumerable<AuctionDTO>> GetTodaysAuctionsAsync()
         {

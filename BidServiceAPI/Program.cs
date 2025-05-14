@@ -3,26 +3,27 @@ using BidServiceAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Logging til vores console (vises i Docker logs)
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<ICacheService, CacheService>();
 
-//This is a test
-//Testing again
-builder.Services.AddScoped<IAuctionServiceClient, FakeAuctionServiceClient>();
+
+builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddScoped<BidService>();
+builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
+builder.Services.AddScoped<IMockAuctionService, MockAuctionService>();
+
+
 builder.Services.AddMemoryCache();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IAuctionCacheService, MockAuctionCacheService>();
-builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -30,9 +31,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

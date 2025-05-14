@@ -1,10 +1,10 @@
 using BidServiceAPI.Models;
 
-public class MockAuctionCacheService : IAuctionCacheService
+public class MockCacheService : IMockCacheService
 {
     private readonly List<AuctionDTO> _auctions = new();
 
-    public MockAuctionCacheService()
+    public MockCacheService()
     {
         // Seedet data ved opstart – klar til brug i tests og controller
 
