@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using BidServiceAPI.Models;
+using BidServiceAPI.Services;
 
 namespace BidServiceAPI.Controller;
 
@@ -11,14 +12,26 @@ public class BidController : ControllerBase
     private readonly ILogger<BidController> _logger;
     private readonly IBidMessagePublisher _publisher;
 
+    private readonly ICacheService _bidService;
+
     public BidController(
         ILogger<BidController> logger,
+        ICacheService bidService,
         IAuctionCacheService auctionService,
         IBidMessagePublisher publisher)
     {
         _logger = logger;
         _auctionService = auctionService;
+        _bidService = bidService;
         _publisher = publisher;
+    }
+
+
+    [HttpGet("auctions")]
+    public async Task<IActionResult> GetTodaysAuctions()
+    {
+        var auctions = await _bidService.GetTodaysAuctionsAsync();
+        return Ok(auctions);
     }
 
     [HttpPost("placebid")]
