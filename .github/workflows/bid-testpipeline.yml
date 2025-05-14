@@ -3,7 +3,7 @@ name: BidTestingPipeline
 on:
   push:
     branches:
-      - "main"
+      - "develop"
   pull_request:
     branches:
       - "develop"
