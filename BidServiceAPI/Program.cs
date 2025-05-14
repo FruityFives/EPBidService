@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ICacheService, CacheService>();
 
 //This is a test
+//Testing again
 builder.Services.AddScoped<IAuctionServiceClient, FakeAuctionServiceClient>();
 builder.Services.AddMemoryCache();
 
