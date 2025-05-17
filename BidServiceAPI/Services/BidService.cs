@@ -60,7 +60,8 @@ namespace BidServiceAPI.Services
                 Timestamp = DateTime.UtcNow
             };
 
-            await _publisher.PublishBidAsync(bid);
+            _publisher.PublishBidAsync(bid);
+
             _logger.LogInformation("Bud sendt til RabbitMQ. BidId: {BidId}, Auktion: {AuctionId}", bid.BidId, bid.AuctionId);
 
             return "Bud accepteret";

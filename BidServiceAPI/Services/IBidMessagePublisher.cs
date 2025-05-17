@@ -2,5 +2,6 @@ using BidServiceAPI.Models;
 
 public interface IBidMessagePublisher
 {
-    Task PublishBidAsync(Bid message);
+    Task PublishBidAsync(Bid bid);
 }
+
