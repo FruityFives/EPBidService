@@ -1,36 +1,49 @@
 using BidServiceAPI.MockingService;
 using BidServiceAPI.Services;
+using NLog;
+using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
+var logger = NLogBuilder.ConfigureNLog("NLog.config").GetCurrentClassLogger();
+logger.Debug("Start BidService");
 
-// Logging til vores console (vises i Docker logs)
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(LogLevel.Information);
-
-builder.Services.AddControllers();
-
-
-builder.Services.AddScoped<ICacheService, CacheService>();
-builder.Services.AddScoped<BidService>();
-builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
-builder.Services.AddScoped<IMockAuctionService, MockAuctionService>();
-
-
-builder.Services.AddMemoryCache();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    var builder = WebApplication.CreateBuilder(args);
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+    builder.Logging.ClearProviders();
+    builder.Host.UseNLog(); // Bruger NLog.config
+
+    builder.Services.AddControllers();
+
+    builder.Services.AddScoped<ICacheService, CacheService>();
+    builder.Services.AddScoped<BidService>();
+    builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
+    builder.Services.AddScoped<IMockAuctionService, MockAuctionService>();
+
+    builder.Services.AddMemoryCache();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    var app = builder.Build();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
+    app.Run();
+}
+catch (Exception ex)
+{
+    logger.Error(ex, "Stopped program because of exception");
+    throw;
+}
+finally
+{
+    LogManager.Shutdown();
+}
