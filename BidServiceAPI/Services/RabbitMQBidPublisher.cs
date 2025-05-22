@@ -37,6 +37,6 @@ public class RabbitMqBidPublisher : IBidMessagePublisher
             body: body
         );
 
-        _logger.LogInformation("Published bid {id} to RabbitMQ", bid.BidId);
+        _logger.LogInformation("Published the bid {id} to RabbitMQ", bid.BidId);
     }
 }
