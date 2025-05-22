@@ -14,7 +14,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NLog" Version="5.4.0" />
+    <PackageReference Include="NLog.Targets.Loki" Version="2.2.0" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.4.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
+
+  <ItemGroup>
+  <None Include="NLog.config">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+
 
 </Project>

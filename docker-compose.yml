@@ -1,0 +1,47 @@
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+
+  bidserviceapi:
+    build: ./BidServiceAPI
+    container_name: bidserviceapi
+    depends_on:
+      - rabbitmq
+      - loki
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:5000"
+    restart: always
+    networks:
+      - haav
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - haav
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - haav
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+networks:
+  haav:
