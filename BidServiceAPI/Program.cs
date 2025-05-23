@@ -1,4 +1,3 @@
-using BidServiceAPI.MockingService;
 using BidServiceAPI.Services;
 using NLog;
 using NLog.Web;
@@ -15,12 +14,19 @@ try
 
     builder.Services.AddControllers();
 
+    builder.Services.AddMemoryCache();
+
+    // Skift til rigtige services
     builder.Services.AddScoped<ICacheService, CacheService>();
     builder.Services.AddScoped<BidService>();
     builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
-    builder.Services.AddScoped<IMockAuctionService, MockAuctionService>();
 
-    builder.Services.AddMemoryCache();
+    // HTTP Client til AuctionService
+    builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
+    builder.Services.AddHttpClient<IAuctionHttpClient, AuctionHttpClient>(client =>
+    {
+        client.BaseAddress = new Uri("http://auctionserviceapi:80/"); // juster til docker-compose service-navn
+    });
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
