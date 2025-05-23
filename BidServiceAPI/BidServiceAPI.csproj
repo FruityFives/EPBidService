@@ -6,8 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.1.1</AssemblyVersion>
     <FileVersion>1.0.1.1</FileVersion>
-    <InformationalVersion>3.0.0</InformationalVersion>
+    <InformationalVersion>3.0.1</InformationalVersion>
     <Description> 
+      3.0.1 Added ændret baseuri
       3.0.0 Added HttpClient
       2.2.0 Added RabbitMQ and NLog
       2.1.0 Added Logic for BidService
