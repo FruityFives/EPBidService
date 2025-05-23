@@ -20,7 +20,7 @@ jobs:
       IMAGE_NAME: bid-service
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 
 
       - name: Get metadata from csproj-file
         uses: kzrnm/get-net-sdk-project-versions-action@v2
@@ -35,8 +35,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build the Docker image
-        run: docker build . -f BidServiceAPI/Dockerfile \
-          -t ${DOCKER_USER}/${IMAGE_NAME}:${{ steps.get-version.outputs.informational-version }}
+        run: docker build . -f BidServiceAPI/Dockerfile -t ${DOCKER_USER}/${IMAGE_NAME}:${{ steps.get-version.outputs.informational-version }}
 
       - name: Push Docker image to Docker Hub
         run: docker push ${DOCKER_USER}/${IMAGE_NAME}:${{ steps.get-version.outputs.informational-version }}
