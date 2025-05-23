@@ -25,8 +25,9 @@ try
     builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
     builder.Services.AddHttpClient<IAuctionHttpClient, AuctionHttpClient>(client =>
     {
-        client.BaseAddress = new Uri("http://auctionserviceapi:5002/");
-        
+
+        client.BaseAddress = new Uri("http://auctionserviceapi:5002/"); // juster til docker-compose service-navn
+
     });
 
     builder.Services.AddEndpointsApiExplorer();
