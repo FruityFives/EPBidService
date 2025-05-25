@@ -26,7 +26,7 @@ namespace BidServiceAPI.Services
             return auctions.Select(a => new AuctionDTO
             {
                 AuctionId = a.AuctionId,
-                Status = AuctionStatus.Active,
+                Status = a.Status,
                 MinBid = Convert.ToDecimal(a.MinPrice),
                 CurrentBid = a.CurrentBid?.Amount ?? 0
             });
