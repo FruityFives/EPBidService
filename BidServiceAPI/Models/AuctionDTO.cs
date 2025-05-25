@@ -3,9 +3,16 @@
     public class AuctionDTO
     {
         public Guid AuctionId { get; set; }
-        public string Status { get; set; }
+        public AuctionStatus Status { get; set; }
         public decimal MinBid { get; set; }
         public decimal CurrentBid { get; set; }
 
+    }
+
+    public enum AuctionStatus
+    {
+        Inactive = 0,
+        Active = 1,
+        Closed = 2
     }
 }
