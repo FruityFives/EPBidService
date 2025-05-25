@@ -8,6 +8,7 @@
     <FileVersion>1.0.1.1</FileVersion>
     <InformationalVersion>3.0.2</InformationalVersion>
     <Description> 
+      3.0.3 Rettet Raw HTTP
       3.0.2 Changed AuctionDTO.Status from String to Enum
       3.0.1 Added ændret baseuri
       3.0.0 Added HttpClient
