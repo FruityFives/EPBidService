@@ -34,7 +34,7 @@ namespace BidServiceAPI.Services
                 return "Auktion ikke fundet";
             }
 
-            if (auction.Status != "Active")
+            if (auction.Status != AuctionStatus.Active)
             {
                 _logger.LogWarning("Auktion {AuctionId} er ikke aktiv. Status: {Status}", auction.AuctionId, auction.Status);
                 return "Auktionen er ikke aktiv";

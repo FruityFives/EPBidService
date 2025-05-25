@@ -40,7 +40,7 @@ namespace BidServiceAPI.MSTest
         public async Task PlaceBid_InactiveAuction_ReturnsBadRequest()
         {
             _mockCache.Setup(c => c.GetAuctionByIdInCache(It.IsAny<Guid>()))
-                      .ReturnsAsync(new AuctionDTO { Status = "Closed" });
+                      .ReturnsAsync(new AuctionDTO { Status = AuctionStatus.Closed });
 
             var result = await _service.PlaceBidAsync(new BidDTO { AuctionId = Guid.NewGuid() });
 
@@ -53,7 +53,7 @@ namespace BidServiceAPI.MSTest
             _mockCache.Setup(c => c.GetAuctionByIdInCache(It.IsAny<Guid>()))
                       .ReturnsAsync(new AuctionDTO
                       {
-                          Status = "Active",
+                          Status = AuctionStatus.Active,
                           MinBid = 500,
                           CurrentBid = 600
                       });
@@ -70,7 +70,7 @@ namespace BidServiceAPI.MSTest
             var auction = new AuctionDTO
             {
                 AuctionId = auctionId,
-                Status = "Active",
+                Status = AuctionStatus.Active,
                 MinBid = 100,
                 CurrentBid = 150
             };

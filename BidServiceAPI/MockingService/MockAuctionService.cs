@@ -11,7 +11,7 @@ namespace BidServiceAPI.MockingService
                 new AuctionDTO
                 {
                     AuctionId = Guid.NewGuid(),
-                    Status = "Active",
+                    Status = AuctionStatus.Active,
                     MinBid = 100,
                     CurrentBid = 150
 
@@ -20,7 +20,7 @@ namespace BidServiceAPI.MockingService
                 new AuctionDTO
                 {
                     AuctionId = Guid.NewGuid(),
-                    Status = "Closed",
+                    Status = AuctionStatus.Active,
                     MinBid = 200,
                     CurrentBid = 250
 

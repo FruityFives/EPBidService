@@ -13,7 +13,7 @@ public class MockCacheService : IMockCacheService
             AuctionId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             MinBid = 800,
             CurrentBid = 1000,
-            Status = "Active"
+            Status = AuctionStatus.Active
         };
 
         var auction2 = new AuctionDTO
@@ -21,7 +21,7 @@ public class MockCacheService : IMockCacheService
             AuctionId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
             MinBid = 500,
             CurrentBid = 750,
-            Status = "Closed"
+            Status = AuctionStatus.Closed
         };
 
         var auction3 = new AuctionDTO
@@ -29,7 +29,7 @@ public class MockCacheService : IMockCacheService
             AuctionId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             MinBid = 200,
             CurrentBid = 200,
-            Status = "Active"
+            Status = AuctionStatus.Active
         };
 
         _auctions.AddRange(new[] { auction1, auction2, auction3 });
