@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.1.1</AssemblyVersion>
     <FileVersion>1.0.1.1</FileVersion>
-    <InformationalVersion>3.0.2</InformationalVersion>
+    <InformationalVersion>3.0.3</InformationalVersion>
     <Description> 
       3.0.3 Rettet Raw HTTP
       3.0.2 Changed AuctionDTO.Status from String to Enum
