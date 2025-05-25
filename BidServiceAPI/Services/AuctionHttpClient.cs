@@ -3,6 +3,8 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System;
 
 namespace BidServiceAPI.Services
@@ -18,7 +20,21 @@ namespace BidServiceAPI.Services
 
         public async Task<IEnumerable<AuctionDTO>> GetTodaysAuctionsAsync()
         {
-            var auctions = await _httpClient.GetFromJsonAsync<List<AuctionRaw>>("api/catalog/all-auctions-today");
+            var response = await _httpClient.GetAsync("api/catalog/all-auctions-today");
+            var content = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine("🔎 RAW JSON fra AuctionService:");
+            Console.WriteLine(content);
+
+            response.EnsureSuccessStatusCode();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() } // 🔄 understøtter enum som "Active"
+            };
+
+            var auctions = JsonSerializer.Deserialize<List<AuctionRaw>>(content, options);
 
             if (auctions == null)
                 return new List<AuctionDTO>();
@@ -36,8 +52,12 @@ namespace BidServiceAPI.Services
         private class AuctionRaw
         {
             public Guid AuctionId { get; set; }
+
+            [JsonConverter(typeof(JsonStringEnumConverter))] // 🔄 konverter "Active" → enum
             public AuctionStatus Status { get; set; }
+
             public double MinPrice { get; set; }
+
             public BidRaw? CurrentBid { get; set; }
 
             public class BidRaw
