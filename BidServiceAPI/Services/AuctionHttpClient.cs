@@ -36,7 +36,7 @@ namespace BidServiceAPI.Services
         private class AuctionRaw
         {
             public Guid AuctionId { get; set; }
-            public string Status { get; set; } = string.Empty;
+            public AuctionStatus Status { get; set; }
             public double MinPrice { get; set; }
             public BidRaw? CurrentBid { get; set; }
 
