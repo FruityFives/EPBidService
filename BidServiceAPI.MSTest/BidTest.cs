@@ -96,13 +96,19 @@ namespace BidServiceAPI.MSTest
         [TestMethod]
         public async Task GetTodaysAuctions_ReturnsCachedList()
         {
+            // Arrange
             var expected = new List<AuctionDTO> { new AuctionDTO(), new AuctionDTO() };
 
-            _mockCache.Setup(c => c.GetTodaysAuctionsInCache()).ReturnsAsync(expected);
+            _mockCache
+                .Setup(c => c.GetAuctionsByStatusInCache(AuctionStatus.Active))
+                .ReturnsAsync(expected);
 
+            // Act
             var result = await _service.GetTodaysAuctionsAsync();
 
+            // Assert
             Assert.AreEqual(2, result.Count);
         }
     }
 }
+
