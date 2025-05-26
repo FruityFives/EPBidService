@@ -47,10 +47,12 @@ namespace BidServiceAPI.Services
                 return "Buddet er ugyldigt";
             }
 
+            // ✅ Opdater auktionen med det nye bud
             auction.CurrentBid = bidRequest.Amount;
             await _cache.UpdateAuctionInCache(auction);
             _logger.LogInformation("Auktion {AuctionId} opdateret med nyt bud: {Amount}", auction.AuctionId, auction.CurrentBid);
 
+            // ✅ Opret og send bud til RabbitMQ
             var bid = new Bid
             {
                 BidId = Guid.NewGuid(),
@@ -60,8 +62,7 @@ namespace BidServiceAPI.Services
                 Timestamp = DateTime.UtcNow
             };
 
-            _publisher.PublishBidAsync(bid);
-
+            await _publisher.PublishBidAsync(bid);
             _logger.LogInformation("Bud sendt til RabbitMQ. BidId: {BidId}, Auktion: {AuctionId}", bid.BidId, bid.AuctionId);
 
             return "Bud accepteret";
