@@ -1,62 +1,48 @@
 using BidServiceAPI.Services;
-using BidServiceAPI.Workers;
-using NLog;
+
 using NLog.Web;
 
 var logger = NLogBuilder.ConfigureNLog("NLog.config").GetCurrentClassLogger();
-logger.Debug("Start BidService");
+logger.Info("Starter BidServiceAPI...");
 
-try
+var builder = WebApplication.CreateBuilder(args);
+
+// Konfigurer logging
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
+
+// Dependency Injection
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService, CacheService>();
+builder.Services.AddSingleton<BidService>();
+builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
+
+// Hosted Worker (RabbitMQ listener)
+builder.Services.AddHostedService<AuctionSyncWorker>();
+
+// HTTP Client til AuctionService
+builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
+builder.Services.AddHttpClient<IAuctionHttpClient, AuctionHttpClient>(client =>
 {
-    var builder = WebApplication.CreateBuilder(args);
+    client.BaseAddress = new Uri("http://auctionserviceapi:5002/");
+});
 
-    // ✅ Gør miljøvariabler tilgængelige for DI (fx AuctionSyncWorker)
-    builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+// Controllers og Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-    // ✅ Setup logging
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog(); // Bruger NLog.config
+var app = builder.Build();
 
-    // ✅ Tilføj nødvendige services
-    builder.Services.AddControllers();
-    builder.Services.AddMemoryCache();
-
-    builder.Services.AddScoped<ICacheService, CacheService>();
-    builder.Services.AddScoped<BidService>();
-    builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
-    builder.Services.AddHostedService<AuctionSyncWorker>();
-
-    // ✅ HTTP Client til AuctionService (Docker service-navn)
-    builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
-    builder.Services.AddHttpClient<IAuctionHttpClient, AuctionHttpClient>(client =>
-    {
-        client.BaseAddress = new Uri("http://auctionserviceapi:5002/");
-    });
-
-    // ✅ Swagger
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    var app = builder.Build();
-
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
-    app.UseHttpsRedirection();
-    app.UseAuthorization();
-    app.MapControllers();
-
-    app.Run();
-}
-catch (Exception ex)
+// Middleware pipeline
+if (app.Environment.IsDevelopment())
 {
-    logger.Error(ex, "Stopped program because of exception");
-    throw;
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-finally
-{
-    LogManager.Shutdown();
-}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();

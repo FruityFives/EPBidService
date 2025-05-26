@@ -6,8 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.1.1</AssemblyVersion>
     <FileVersion>1.0.1.1</FileVersion>
-    <InformationalVersion>3.0.6</InformationalVersion>
+    <InformationalVersion>3.0.7</InformationalVersion>
     <Description>
+      3.07 program.cs fixed
       3.0.6 Rabbitmq 
       3.0.5 Edited HTTP Client
       3.0.4 I really hope it works now....
