@@ -76,24 +76,16 @@ namespace BidServiceAPI.Workers
 
                             if (dto is null)
                             {
-                                _logger.LogWarning("Failed to deserialize message to AuctionSyncDTO");
+                                _logger.LogWarning("❌ Could not deserialize AuctionDTO");
                                 return;
                             }
 
-                            var updatedAuction = new AuctionDTO
-                            {
-                                AuctionId = dto.AuctionId,
-                                Status = (AuctionStatus)dto.Status,
-                                MinBid = dto.MinBid,
-                                CurrentBid = dto.CurrentBid,
-                            };
-
-                            await _cacheService.UpdateAuctionInCache(updatedAuction);
-                            _logger.LogInformation("Updated auction in cache: {AuctionId}", dto.AuctionId);
+                            await _cacheService.UpdateAuctionInCache(dto);
+                            _logger.LogInformation("✅ Updated auction in cache: {AuctionId}", dto.AuctionId);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error processing message");
+                            _logger.LogError(ex, "❌ Error processing message");
                         }
                     };
 
