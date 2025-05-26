@@ -59,21 +59,29 @@ namespace BidServiceAPI.Services
         {
             var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
 
+            List<AuctionDTO> updatedList;
+
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                var updatedList = auctions.Select(a =>
-                    a.AuctionId == auction.AuctionId ? auction : a).ToList();
-
-                _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
-                    Priority = CacheItemPriority.High
-                });
-
-                return Task.CompletedTask;
+                updatedList = auctions
+                    .Where(a => a.AuctionId != auction.AuctionId)
+                    .Append(auction)
+                    .ToList();
+            }
+            else
+            {
+                // Hvis listen ikke findes i cachen endnu
+                updatedList = new List<AuctionDTO> { auction };
             }
 
-            throw new InvalidOperationException("Auktionen findes ikke i cachen.");
+            _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                Priority = CacheItemPriority.High
+            });
+
+            return Task.CompletedTask;
         }
+
     }
 }
