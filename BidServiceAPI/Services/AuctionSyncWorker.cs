@@ -62,32 +62,43 @@ namespace BidServiceAPI.Workers
 
                     var consumer = new AsyncEventingBasicConsumer(channel);
                     consumer.ReceivedAsync += async (model, ea) =>
-                    {
-                        var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-                        _logger.LogInformation("Received message: {Json}", json);
+{
+    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+    _logger.LogInformation("📥 Modtog besked: {Json}", json);
 
-                        try
-                        {
-                            var dto = JsonSerializer.Deserialize<AuctionDTO>(json, new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true,
-                                Converters = { new JsonStringEnumConverter() }
-                            });
+    try
+    {
+        var dto = JsonSerializer.Deserialize<AuctionDTO>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        });
 
-                            if (dto is null)
-                            {
-                                _logger.LogWarning("❌ Could not deserialize AuctionDTO");
-                                return;
-                            }
+        if (dto is null)
+        {
+            _logger.LogWarning("❌ Kunne ikke deserialisere AuctionDTO");
+            return;
+        }
 
-                            await _cacheService.UpdateAuctionInCache(dto);
-                            _logger.LogInformation("✅ Updated auction in cache: {AuctionId}", dto.AuctionId);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "❌ Error processing message");
-                        }
-                    };
+        var existingAuction = await _cacheService.GetAuctionByIdInCache(dto.AuctionId);
+
+        if (existingAuction != null)
+        {
+            await _cacheService.UpdateAuctionInCache(dto);
+            _logger.LogInformation("♻️ Opdaterede auktion i cache: {AuctionId}", dto.AuctionId);
+        }
+        else
+        {
+            await _cacheService.AddAuctionToCache(dto);
+            _logger.LogInformation("🆕 Tilføjede ny auktion til cache: {AuctionId}", dto.AuctionId);
+        }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "❌ Fejl under behandling af RabbitMQ-besked");
+    }
+};
+
 
                     await channel.BasicConsumeAsync("syncAuctionQueue", autoAck: true, consumer: consumer);
 

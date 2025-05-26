@@ -1,6 +1,6 @@
 ﻿using BidServiceAPI.Models;
-using BidServiceAPI.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,35 +12,38 @@ namespace BidServiceAPI.Services
     {
         private readonly IAuctionHttpClient _auctionClient;
         private readonly IMemoryCache _cache;
+        private readonly ILogger<CacheService> _logger;
 
-        public CacheService(IAuctionHttpClient auctionClient, IMemoryCache cache)
+        public CacheService(IAuctionHttpClient auctionClient, IMemoryCache cache, ILogger<CacheService> logger)
         {
             _auctionClient = auctionClient;
             _cache = cache;
+            _logger = logger;
         }
 
-        public async Task<AuctionDTO?> GetAuctionByIdInCache(Guid auctionId)
+        public Task<AuctionDTO?> GetAuctionByIdInCache(Guid auctionId)
         {
             var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                return auctions.FirstOrDefault(a => a.AuctionId == auctionId);
+                return Task.FromResult(auctions.FirstOrDefault(a => a.AuctionId == auctionId));
             }
 
-            return null;
+            return Task.FromResult<AuctionDTO?>(null);
         }
 
         public async Task<List<AuctionDTO>> GetTodaysAuctionsInCache()
         {
             var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
+
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                Console.WriteLine("✅ Cache hit – henter fra cache");
+                _logger.LogInformation("✅ Cache hit – henter fra cache");
                 return auctions.ToList();
             }
 
-            Console.WriteLine("❌ Cache miss – henter fra AuctionService");
+            _logger.LogInformation("❌ Cache miss – henter fra AuctionService");
             auctions = await _auctionClient.GetTodaysAuctionsAsync();
 
             var cacheEntryOptions = new MemoryCacheEntryOptions
@@ -58,7 +61,6 @@ namespace BidServiceAPI.Services
         public Task UpdateAuctionInCache(AuctionDTO auction)
         {
             var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
-
             List<AuctionDTO> updatedList;
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
@@ -67,11 +69,13 @@ namespace BidServiceAPI.Services
                     .Where(a => a.AuctionId != auction.AuctionId)
                     .Append(auction)
                     .ToList();
+
+                _logger.LogInformation("♻️ Opdaterede eksisterende auktion i cache: {AuctionId}", auction.AuctionId);
             }
             else
             {
-                // Hvis listen ikke findes i cachen endnu
                 updatedList = new List<AuctionDTO> { auction };
+                _logger.LogInformation("🆕 Oprettede ny cache og tilføjede auktion: {AuctionId}", auction.AuctionId);
             }
 
             _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
@@ -83,5 +87,30 @@ namespace BidServiceAPI.Services
             return Task.CompletedTask;
         }
 
+        public Task AddAuctionToCache(AuctionDTO auction)
+        {
+            var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
+            List<AuctionDTO> updatedList;
+
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
+            {
+                updatedList = auctions.Append(auction).ToList();
+                _logger.LogInformation("🆕 Tilføjede auktion til eksisterende cache: {AuctionId}", auction.AuctionId);
+            }
+            else
+            {
+                updatedList = new List<AuctionDTO> { auction };
+                _logger.LogInformation("🆕 Oprettede ny cache og tilføjede auktion: {AuctionId}", auction.AuctionId);
+            }
+
+            _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                SlidingExpiration = TimeSpan.FromMinutes(5),
+                Priority = CacheItemPriority.High
+            });
+
+            return Task.CompletedTask;
+        }
     }
 }

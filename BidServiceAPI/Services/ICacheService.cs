@@ -9,6 +9,10 @@ namespace BidServiceAPI.Services
         Task UpdateAuctionInCache(AuctionDTO auction);
 
         Task<List<AuctionDTO>> GetTodaysAuctionsInCache();
+
+        Task AddAuctionToCache(AuctionDTO auction);
+
+
     }
 
 }
