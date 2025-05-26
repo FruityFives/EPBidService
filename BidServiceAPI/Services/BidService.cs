@@ -18,7 +18,7 @@ namespace BidServiceAPI.Services
 
         public async Task<List<AuctionDTO>> GetTodaysAuctionsAsync()
         {
-            return await _cache.GetTodaysAuctionsInCache();
+            return await _cache.GetAuctionsByStatusInCache(AuctionStatus.Active);
         }
 
         public async Task<string> PlaceBidAsync(BidDTO bidRequest)
@@ -67,6 +67,5 @@ namespace BidServiceAPI.Services
 
             return "Bud accepteret";
         }
-
     }
 }

@@ -23,94 +23,97 @@ namespace BidServiceAPI.Services
 
         public Task<AuctionDTO?> GetAuctionByIdInCache(Guid auctionId)
         {
-            var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
-
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
+            foreach (AuctionStatus status in Enum.GetValues(typeof(AuctionStatus)))
             {
-                return Task.FromResult(auctions.FirstOrDefault(a => a.AuctionId == auctionId));
+                var key = $"auctions-{status.ToString().ToLower()}";
+                if (_cache.TryGetValue(key, out IEnumerable<AuctionDTO> auctions))
+                {
+                    var match = auctions.FirstOrDefault(a => a.AuctionId == auctionId);
+                    if (match != null)
+                        return Task.FromResult<AuctionDTO?>(match);
+                }
             }
 
             return Task.FromResult<AuctionDTO?>(null);
         }
 
-        public async Task<List<AuctionDTO>> GetTodaysAuctionsInCache()
+        public Task<List<AuctionDTO>> GetAuctionsByStatusInCache(AuctionStatus status)
         {
-            var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
+            var cacheKey = $"auctions-{status.ToString().ToLower()}";
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                _logger.LogInformation("✅ Cache hit – henter fra cache");
-                return auctions.ToList();
+                _logger.LogInformation("✅ Cache hit for status: {Status}", status);
+                return Task.FromResult(auctions.ToList());
             }
 
-            _logger.LogInformation("❌ Cache miss – henter fra AuctionService");
-            auctions = await _auctionClient.GetTodaysAuctionsAsync();
-
-            var cacheEntryOptions = new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
-                SlidingExpiration = TimeSpan.FromMinutes(5),
-                Priority = CacheItemPriority.High
-            };
-
-            _cache.Set(cacheKey, auctions, cacheEntryOptions);
-
-            return auctions.ToList();
+            _logger.LogWarning("❌ Ingen cache fundet for status: {Status}", status);
+            return Task.FromResult(new List<AuctionDTO>());
         }
+
 
         public Task UpdateAuctionInCache(AuctionDTO auction)
         {
-            var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
-            List<AuctionDTO> updatedList;
+            var cacheKey = $"auctions-{auction.Status.ToString().ToLower()}";
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                updatedList = auctions
+                var updated = auctions
                     .Where(a => a.AuctionId != auction.AuctionId)
                     .Append(auction)
                     .ToList();
 
-                _logger.LogInformation("♻️ Opdaterede eksisterende auktion i cache: {AuctionId}", auction.AuctionId);
+                _cache.Set(cacheKey, updated, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                    Priority = CacheItemPriority.High
+                });
+
+                _logger.LogInformation("♻️ Opdaterede auktion i cache: {AuctionId}", auction.AuctionId);
             }
             else
             {
-                updatedList = new List<AuctionDTO> { auction };
-                _logger.LogInformation("🆕 Oprettede ny cache og tilføjede auktion: {AuctionId}", auction.AuctionId);
-            }
+                _cache.Set(cacheKey, new List<AuctionDTO> { auction }, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                    Priority = CacheItemPriority.High
+                });
 
-            _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
-                Priority = CacheItemPriority.High
-            });
+                _logger.LogInformation("🆕 Oprettede cache med ny auktion: {AuctionId}", auction.AuctionId);
+            }
 
             return Task.CompletedTask;
         }
 
+
         public Task AddAuctionToCache(AuctionDTO auction)
         {
-            var cacheKey = $"auctions-{DateTime.Today:yyyy-MM-dd}";
-            List<AuctionDTO> updatedList;
+            var cacheKey = $"auctions-{auction.Status.ToString().ToLower()}";
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
-                updatedList = auctions.Append(auction).ToList();
+                var updated = auctions.Append(auction).ToList();
+                _cache.Set(cacheKey, updated, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                    Priority = CacheItemPriority.High
+                });
+
                 _logger.LogInformation("🆕 Tilføjede auktion til eksisterende cache: {AuctionId}", auction.AuctionId);
             }
             else
             {
-                updatedList = new List<AuctionDTO> { auction };
+                _cache.Set(cacheKey, new List<AuctionDTO> { auction }, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                    Priority = CacheItemPriority.High
+                });
+
                 _logger.LogInformation("🆕 Oprettede ny cache og tilføjede auktion: {AuctionId}", auction.AuctionId);
             }
 
-            _cache.Set(cacheKey, updatedList, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
-                SlidingExpiration = TimeSpan.FromMinutes(5),
-                Priority = CacheItemPriority.High
-            });
-
             return Task.CompletedTask;
         }
+
     }
 }
