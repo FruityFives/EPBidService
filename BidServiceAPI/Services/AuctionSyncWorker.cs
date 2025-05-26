@@ -4,12 +4,8 @@ using System.Text.Json.Serialization;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using BidServiceAPI.Models;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using BidServiceAPI.Services;
 
-namespace BidServiceAPI.Workers
+namespace BidServiceAPI.Services
 {
     public class AuctionSyncWorker : BackgroundService
     {
