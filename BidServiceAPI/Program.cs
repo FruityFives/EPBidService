@@ -1,4 +1,5 @@
 using BidServiceAPI.Services;
+using BidServiceAPI.Workers;
 using NLog;
 using NLog.Web;
 
@@ -20,6 +21,8 @@ try
     builder.Services.AddScoped<ICacheService, CacheService>();
     builder.Services.AddScoped<BidService>();
     builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
+    builder.Services.AddHostedService<AuctionSyncWorker>();
+
 
     // HTTP Client til AuctionService
     builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
