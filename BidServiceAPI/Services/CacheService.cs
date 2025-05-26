@@ -25,8 +25,9 @@ namespace BidServiceAPI.Services
         {
             foreach (AuctionStatus status in Enum.GetValues(typeof(AuctionStatus)))
             {
-                var key = $"auctions-{status.ToString().ToLower()}";
-                if (_cache.TryGetValue(key, out IEnumerable<AuctionDTO> auctions))
+                var cacheKey = $"auctions-{status.ToString().ToLowerInvariant()}";
+
+                if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
                 {
                     var match = auctions.FirstOrDefault(a => a.AuctionId == auctionId);
                     if (match != null)
@@ -39,7 +40,7 @@ namespace BidServiceAPI.Services
 
         public Task<List<AuctionDTO>> GetAuctionsByStatusInCache(AuctionStatus status)
         {
-            var cacheKey = $"auctions-{status.ToString().ToLower()}";
+            var cacheKey = $"auctions-{status.ToString().ToLowerInvariant()}";
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
@@ -51,10 +52,10 @@ namespace BidServiceAPI.Services
             return Task.FromResult(new List<AuctionDTO>());
         }
 
-
         public Task UpdateAuctionInCache(AuctionDTO auction)
         {
-            var cacheKey = $"auctions-{auction.Status.ToString().ToLower()}";
+            var cacheKey = $"auctions-{auction.Status.ToString().ToLowerInvariant()}";
+            _logger.LogInformation("♻️ Opdaterer cache for status: {Status}, key: {CacheKey}", auction.Status, cacheKey);
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
@@ -85,10 +86,10 @@ namespace BidServiceAPI.Services
             return Task.CompletedTask;
         }
 
-
         public Task AddAuctionToCache(AuctionDTO auction)
         {
-            var cacheKey = $"auctions-{auction.Status.ToString().ToLower()}";
+            var cacheKey = $"auctions-{auction.Status.ToString().ToLowerInvariant()}";
+            _logger.LogInformation("➕ Tilføjer auktion med status: {Status}, key: {CacheKey}", auction.Status, cacheKey);
 
             if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
             {
@@ -114,6 +115,5 @@ namespace BidServiceAPI.Services
 
             return Task.CompletedTask;
         }
-
     }
 }
