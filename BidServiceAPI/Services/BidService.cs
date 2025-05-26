@@ -26,19 +26,15 @@ namespace BidServiceAPI.Services
             _logger.LogInformation("Modtager bud fra bruger {UserId} på auktion {AuctionId} med beløb {Amount}",
                 bidRequest.UserId, bidRequest.AuctionId, bidRequest.Amount);
 
-            var auction = await _cache.GetAuctionByIdInCache(bidRequest.AuctionId);
+            var activeAuctions = await _cache.GetAuctionsByStatusInCache(AuctionStatus.Active);
+            var auction = activeAuctions.FirstOrDefault(a => a.AuctionId == bidRequest.AuctionId);
 
             if (auction == null)
             {
-                _logger.LogWarning("Auktion med ID {AuctionId} blev ikke fundet i cachen", bidRequest.AuctionId);
-                return "Auktion ikke fundet";
+                _logger.LogWarning("❌ Auktionen er ikke aktiv eller findes ikke. ID: {AuctionId}", bidRequest.AuctionId);
+                return "Auktionen er ikke aktiv eller fundet";
             }
 
-            if (auction.Status != AuctionStatus.Active)
-            {
-                _logger.LogWarning("Auktion {AuctionId} er ikke aktiv. Status: {Status}", auction.AuctionId, auction.Status);
-                return "Auktionen er ikke aktiv";
-            }
 
             if (bidRequest.Amount < auction.MinBid || bidRequest.Amount <= auction.CurrentBid)
             {
