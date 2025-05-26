@@ -68,7 +68,7 @@ namespace BidServiceAPI.Workers
 
                         try
                         {
-                            var dto = JsonSerializer.Deserialize<AuctionSyncDTO>(json, new JsonSerializerOptions
+                            var dto = JsonSerializer.Deserialize<AuctionDTO>(json, new JsonSerializerOptions
                             {
                                 PropertyNameCaseInsensitive = true,
                                 Converters = { new JsonStringEnumConverter() }

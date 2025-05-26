@@ -1,4 +1,8 @@
-﻿namespace BidServiceAPI.Models
+using BidServiceAPI.Models;
+using System;
+
+
+namespace BidServiceAPI.Models
 {
     public class AuctionDTO
     {
@@ -6,7 +10,7 @@
         public AuctionStatus Status { get; set; }
         public decimal MinBid { get; set; }
         public decimal CurrentBid { get; set; }
-
+        public DateTime EndDate { get; set; }
     }
 
     public enum AuctionStatus
