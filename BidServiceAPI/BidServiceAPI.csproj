@@ -6,8 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.1.1</AssemblyVersion>
     <FileVersion>1.0.1.1</FileVersion>
-    <InformationalVersion>3.0.8</InformationalVersion>
+    <InformationalVersion>3.0.9</InformationalVersion>
     <Description>
+      3.0.9 updated bid function #2
       3.0.8 updated bid function
       3.0.7 program.cs fixed
       3.0.6 Rabbitmq 

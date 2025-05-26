@@ -54,37 +54,56 @@ namespace BidServiceAPI.Services
 
         public Task UpdateAuctionInCache(AuctionDTO auction)
         {
-            var cacheKey = $"auctions-{auction.Status.ToString().ToLowerInvariant()}";
-            _logger.LogInformation("♻️ Opdaterer cache for status: {Status}, key: {CacheKey}", auction.Status, cacheKey);
+            var newKey = $"auctions-{auction.Status.ToString().ToLowerInvariant()}";
+            _logger.LogInformation("♻️ Opdaterer cache for status: {Status}, key: {CacheKey}", auction.Status, newKey);
 
-            if (_cache.TryGetValue(cacheKey, out IEnumerable<AuctionDTO> auctions))
+            // ➕ Tilføj til ny status-liste
+            if (_cache.TryGetValue(newKey, out IEnumerable<AuctionDTO> currentList))
             {
-                var updated = auctions
+                var updated = currentList
                     .Where(a => a.AuctionId != auction.AuctionId)
                     .Append(auction)
                     .ToList();
 
-                _cache.Set(cacheKey, updated, new MemoryCacheEntryOptions
+                _cache.Set(newKey, updated, new MemoryCacheEntryOptions
                 {
                     AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
                     Priority = CacheItemPriority.High
                 });
-
-                _logger.LogInformation("♻️ Opdaterede auktion i cache: {AuctionId}", auction.AuctionId);
             }
             else
             {
-                _cache.Set(cacheKey, new List<AuctionDTO> { auction }, new MemoryCacheEntryOptions
+                _cache.Set(newKey, new List<AuctionDTO> { auction }, new MemoryCacheEntryOptions
                 {
                     AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
                     Priority = CacheItemPriority.High
                 });
+            }
 
-                _logger.LogInformation("🆕 Oprettede cache med ny auktion: {AuctionId}", auction.AuctionId);
+            _logger.LogInformation("♻️ Opdaterede auktion i cache: {AuctionId}", auction.AuctionId);
+
+            // ❌ Fjern auktionen fra andre status-lister
+            foreach (AuctionStatus status in Enum.GetValues(typeof(AuctionStatus)))
+            {
+                if (status == auction.Status) continue;
+
+                var otherKey = $"auctions-{status.ToString().ToLowerInvariant()}";
+                if (_cache.TryGetValue(otherKey, out IEnumerable<AuctionDTO> otherList))
+                {
+                    var cleaned = otherList.Where(a => a.AuctionId != auction.AuctionId).ToList();
+                    _cache.Set(otherKey, cleaned, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10),
+                        Priority = CacheItemPriority.Normal
+                    });
+
+                    _logger.LogInformation("🧹 Fjernede auktion {AuctionId} fra {OtherKey}", auction.AuctionId, otherKey);
+                }
             }
 
             return Task.CompletedTask;
         }
+
 
         public Task AddAuctionToCache(AuctionDTO auction)
         {
