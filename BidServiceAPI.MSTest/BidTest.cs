@@ -3,6 +3,9 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using BidServiceAPI.Services;
 using BidServiceAPI.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BidServiceAPI.MSTest
 {
@@ -25,47 +28,87 @@ namespace BidServiceAPI.MSTest
             _service = new BidService(_mockCache.Object, _mockPublisher.Object, _mockLogger.Object);
         }
 
+        /// <summary>
+        /// Tester at metoden returnerer false, hvis auktionen ikke findes i cache.
+        /// </summary>
         [TestMethod]
-        public async Task PlaceBid_InvalidAuction_ReturnsNotFound()
+        public async Task PlaceBid_AuctionNotFoundInCache_ReturnsFalse()
         {
-            _mockCache.Setup(c => c.GetAuctionByIdInCache(It.IsAny<Guid>()))
-                      .ReturnsAsync((AuctionDTO?)null);
+            // Arrange
+            _mockCache.Setup(c => c.GetAuctionsByStatusInCache(AuctionStatus.Active))
+                      .ReturnsAsync(new List<AuctionDTO>());
 
-            var result = await _service.PlaceBidAsync(new BidDTO { AuctionId = Guid.NewGuid() });
+            var bid = new BidDTO { AuctionId = Guid.NewGuid() };
 
-            Assert.AreEqual("Auktion ikke fundet", result);
+            // Act
+            var result = await _service.PlaceBidAsync(bid);
+
+            // Assert
+            Assert.IsFalse(result);
         }
 
+        /// <summary>
+        /// Tester at metoden returnerer false, hvis auktionen er lukket og derfor ikke findes i listen over aktive auktioner.
+        /// </summary>
         [TestMethod]
-        public async Task PlaceBid_InactiveAuction_ReturnsBadRequest()
+        public async Task PlaceBid_AuctionClosed_NotInActiveList_ReturnsFalse()
         {
-            _mockCache.Setup(c => c.GetAuctionByIdInCache(It.IsAny<Guid>()))
-                      .ReturnsAsync(new AuctionDTO { Status = AuctionStatus.Closed });
+            // Arrange
+            var auctionId = Guid.NewGuid();
+            var bid = new BidDTO
+            {
+                AuctionId = auctionId,
+                Amount = 200,
+                UserId = Guid.NewGuid()
+            };
 
-            var result = await _service.PlaceBidAsync(new BidDTO { AuctionId = Guid.NewGuid() });
+            // Auktionen er teknisk set lukket, men PlaceBidAsync henter kun "aktive" auktioner,
+            // så vi simulerer at den ikke findes i listen over aktive.
+            _mockCache.Setup(c => c.GetAuctionsByStatusInCache(AuctionStatus.Active))
+                      .ReturnsAsync(new List<AuctionDTO>()); // tom liste
 
-            Assert.AreEqual("Auktionen er ikke aktiv", result);
+            // Act
+            var result = await _service.PlaceBidAsync(bid);
+
+            // Assert
+            Assert.IsFalse(result);
         }
 
+        /// <summary>
+        /// Tester at metoden returnerer false, hvis buddet er under minimum eller eksisterende bud.
+        /// </summary>
         [TestMethod]
-        public async Task PlaceBid_BelowMinBid_ReturnsBadRequest()
+        public async Task PlaceBid_BelowMinBid_ReturnsFalse()
         {
-            _mockCache.Setup(c => c.GetAuctionByIdInCache(It.IsAny<Guid>()))
-                      .ReturnsAsync(new AuctionDTO
-                      {
-                          Status = AuctionStatus.Active,
-                          MinBid = 500,
-                          CurrentBid = 600
-                      });
+            // Arrange
+            var auctionId = Guid.NewGuid();
+            var auction = new AuctionDTO
+            {
+                AuctionId = auctionId,
+                Status = AuctionStatus.Active,
+                MinBid = 500,
+                CurrentBid = 600
+            };
 
-            var result = await _service.PlaceBidAsync(new BidDTO { Amount = 450, AuctionId = Guid.NewGuid() });
+            _mockCache.Setup(c => c.GetAuctionsByStatusInCache(AuctionStatus.Active))
+                      .ReturnsAsync(new List<AuctionDTO> { auction });
 
-            Assert.AreEqual("Buddet er ugyldigt", result);
+            var bid = new BidDTO { AuctionId = auctionId, Amount = 450 };
+
+            // Act
+            var result = await _service.PlaceBidAsync(bid);
+
+            // Assert
+            Assert.IsFalse(result);
         }
 
+        /// <summary>
+        /// Tester at et gyldigt bud opdaterer cache og sendes til RabbitMQ.
+        /// </summary>
         [TestMethod]
-        public async Task PlaceBid_ValidBid_UpdatesCacheAndPublishes()
+        public async Task PlaceBid_ValidBid_UpdatesCacheAndPublishes_ReturnsTrue()
         {
+            // Arrange
             var auctionId = Guid.NewGuid();
             var auction = new AuctionDTO
             {
@@ -75,8 +118,8 @@ namespace BidServiceAPI.MSTest
                 CurrentBid = 150
             };
 
-            _mockCache.Setup(c => c.GetAuctionByIdInCache(auctionId))
-                      .ReturnsAsync(auction);
+            _mockCache.Setup(c => c.GetAuctionsByStatusInCache(AuctionStatus.Active))
+                      .ReturnsAsync(new List<AuctionDTO> { auction });
 
             var bid = new BidDTO
             {
@@ -85,16 +128,20 @@ namespace BidServiceAPI.MSTest
                 UserId = Guid.NewGuid()
             };
 
+            // Act
             var result = await _service.PlaceBidAsync(bid);
 
+            // Assert
+            Assert.IsTrue(result);
             _mockCache.Verify(c => c.UpdateAuctionInCache(It.Is<AuctionDTO>(a => a.CurrentBid == 200)), Times.Once);
             _mockPublisher.Verify(p => p.PublishBidAsync(It.IsAny<Bid>()), Times.Once);
-
-            Assert.AreEqual("Bud accepteret", result);
         }
 
+        /// <summary>
+        /// Tester at GetActiveAuctionsAsync returnerer den cachede liste af aktive auktioner.
+        /// </summary>
         [TestMethod]
-        public async Task GetTodaysAuctions_ReturnsCachedList()
+        public async Task GetActiveAuctions_ReturnsCachedList()
         {
             // Arrange
             var expected = new List<AuctionDTO> { new AuctionDTO(), new AuctionDTO() };
@@ -104,11 +151,10 @@ namespace BidServiceAPI.MSTest
                 .ReturnsAsync(expected);
 
             // Act
-            var result = await _service.GetTodaysAuctionsAsync();
+            var result = await _service.GetActiveAuctionsAsync();
 
             // Assert
             Assert.AreEqual(2, result.Count);
         }
     }
 }
-

@@ -5,7 +5,7 @@ namespace BidServiceAPI.Services
     public interface IBidService
     {
         Task<string> PlaceBidAsync(BidDTO bidRequest);
-        Task<List<AuctionDTO>> GetTodaysAuctionsAsync();
+        Task<List<AuctionDTO>> GetActiveAuctionsAsync();
     }
 
 }

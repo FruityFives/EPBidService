@@ -6,8 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.1.1</AssemblyVersion>
     <FileVersion>1.0.1.1</FileVersion>
-    <InformationalVersion>4.0.0</InformationalVersion>
+    <InformationalVersion>5.0.0</InformationalVersion>
     <Description>
+      5.0.0 final release
       4.0.0 final bid implementation
       3.0.9 updated bid function #2
       3.0.8 updated bid function

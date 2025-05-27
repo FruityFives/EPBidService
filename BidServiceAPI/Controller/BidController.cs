@@ -5,7 +5,7 @@ using BidServiceAPI.Services;
 namespace BidServiceAPI.Controller;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/bid")]
 public class BidController : ControllerBase
 {
     private readonly ILogger<BidController> _logger;
@@ -17,24 +17,15 @@ public class BidController : ControllerBase
         _bidService = bidService;
     }
 
-    [HttpGet("auctions")]
-    public async Task<IActionResult> GetTodaysAuctions()
-    {
-        _logger.LogInformation("Endpoint /auctions called");
-
-        try
-        {
-            var auctions = await _bidService.GetTodaysAuctionsAsync();
-            _logger.LogInformation("Successfully retrieved today's auctions");
-            return Ok(auctions);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving today's auctions");
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
+    /// <summary>
+    /// Modtager og behandler et bud fra en bruger på en auktion.
+    /// </summary>
+    /// <param name="bidRequest">DTO med information om buddet, herunder bruger-ID, auktion-ID og beløb.</param>
+    /// <returns>
+    /// 200 OK hvis buddet accepteres og sendes til RabbitMQ.  
+    /// 400 Bad Request hvis buddet afvises.  
+    /// 500 Internal Server Error ved fejl under behandling.
+    /// </returns>
     [HttpPost("placebid")]
     public async Task<IActionResult> PlaceBid([FromBody] BidDTO bidRequest)
     {
@@ -43,21 +34,45 @@ public class BidController : ControllerBase
 
         try
         {
-            var result = await _bidService.PlaceBidAsync(bidRequest);
+            var success = await _bidService.PlaceBidAsync(bidRequest);
 
-            if (result != "Bud accepteret")
+            if (!success)
             {
-                _logger.LogWarning("Bid rejected: {Reason}", result);
-                return BadRequest(result);
+                _logger.LogWarning("Bid rejected for auction {AuctionId}", bidRequest.AuctionId);
+                return BadRequest("Bud blev afvist");
             }
 
             _logger.LogInformation("Bid accepted and sent to RabbitMQ for auction {AuctionId}", bidRequest.AuctionId);
-            return Ok(result);
-
+            return Ok("Bud accepteret");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while placing bid for auction {AuctionId}", bidRequest.AuctionId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+
+    /// <summary>
+    /// Henter en liste over alle aktive auktioner fra cache.
+    /// </summary>
+    /// <returns>
+    /// 200 OK med listen over aktive auktioner.  
+    /// 500 Internal Server Error hvis noget går galt.
+    /// </returns>
+    [HttpGet("activeauctions")]
+    public async Task<IActionResult> GetActiveAuctions()
+    {
+        _logger.LogInformation("Henter aktive auktioner...");
+
+        try
+        {
+            var auctions = await _bidService.GetActiveAuctionsAsync();
+            return Ok(auctions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fejl ved hentning af aktive auktioner");
             return StatusCode(500, "Internal server error");
         }
     }

@@ -15,17 +15,10 @@ builder.Host.UseNLog();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheService, CacheService>();
 builder.Services.AddSingleton<BidService>();
-builder.Services.AddSingleton<IBidMessagePublisher, RabbitMqBidPublisher>();
+builder.Services.AddSingleton<IBidMessagePublisher, BidMessagePublisher>();
 
 // Hosted Worker (RabbitMQ listener)
 builder.Services.AddHostedService<AuctionSyncWorker>();
-
-// HTTP Client til AuctionService
-builder.Services.AddScoped<IAuctionHttpClient, AuctionHttpClient>();
-builder.Services.AddHttpClient<IAuctionHttpClient, AuctionHttpClient>(client =>
-{
-    client.BaseAddress = new Uri("http://auctionserviceapi:5002/");
-});
 
 // Controllers og Swagger
 builder.Services.AddControllers();

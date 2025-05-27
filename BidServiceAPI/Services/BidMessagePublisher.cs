@@ -2,15 +2,27 @@ using BidServiceAPI.Models;
 using RabbitMQ.Client;
 using System.Text.Json;
 
-public class RabbitMqBidPublisher : IBidMessagePublisher
+/// <summary>
+/// Publisher, der sender bud til RabbitMQ køen "bidQueue".
+/// </summary>
+public class BidMessagePublisher : IBidMessagePublisher
 {
-    private readonly ILogger<RabbitMqBidPublisher> _logger;
+    private readonly ILogger<BidMessagePublisher> _logger;
 
-    public RabbitMqBidPublisher(ILogger<RabbitMqBidPublisher> logger)
+    /// <summary>
+    /// Initialiserer en ny instance af <see cref="BidMessagePublisher"/>.
+    /// </summary>
+    /// <param name="logger">Logger til at logge hændelser i forbindelse med bud-publicering.</param>
+    public BidMessagePublisher(ILogger<BidMessagePublisher> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Publicerer et bud til RabbitMQ køen "bidQueue".
+    /// </summary>
+    /// <param name="bid">Bud-objektet, der skal serialiseres og sendes.</param>
+    /// <returns>En asynkron opgave, der fuldføres, når buddet er sendt.</returns>
     public async Task PublishBidAsync(Bid bid)
     {
         var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
