@@ -43,7 +43,7 @@ namespace BidServiceAPI.Services
             var rabbitMQHost = _configuration["RABBITMQ_HOST"] ?? "localhost";
             _logger.LogInformation("AuctionSyncWorker initialized. RabbitMQ host: {Host}", rabbitMQHost);
 
-            const int maxAttempts = 10;
+            const int maxAttempts = 50;
             int attempt = 0;
 
             while (attempt < maxAttempts && !stoppingToken.IsCancellationRequested)
